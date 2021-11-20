@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student management ststem</title>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <!-- Add Student Section -->
+    <h2>Add a student</h2>
+    <div><label>Student name: </label><input type="text" id="addStudentName"></div>
+    <div><label>Student age: </label><input type="text" id="addStudentAge"></div>
+    <div><label>Student gender: </label>
+        <label>male</label><input type="radio" value="male" name="addStudentGender">
+        <label>female</label><input type="radio" value="female" name="addStudentGender">
+    </div>
+    <button id='addStudents'>Add</button>
+
+    <!-- Edit Student Section -->
+    <h2>Edit a student</h2>
+    <input type="hidden" id="editStudentId">
+    <div><label>Student name: </label><input type="text" id="editStudentName"></div>
+    <div><label>Student age: </label><input type="text" id="editStudentAge"></div>
+    <div><label>Student gender: </label>
+        <label>male</label><input type="radio" value="male" name="editStudentGender">
+        <label>female</label><input type="radio" value="female" name="editStudentGender">
+    </div>
+    <button id='editStudents'>Edit</button>
+
+    <!-- Query Student info Section -->
+    <h2>Query Student</h2>
+    <select id="searchType">
+        <option value="name">Name</option>
+        <option value="age">Age</option>
+        <option value="gender">Gender</option>
+    </select>
+    <input type="text" id="searchValue">
+    <button id="searchBtn">Query</button>
+
+    <!-- Student information -->
+    <h2>Student List</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Student name</th>
+                <th>Student age</th>
+                <th>Student gender</th>
+                <th>Student action</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+
+    <script src="./js/jquery.min.js"></script>
+    <script>
+
+        let data = {};
+
+        getStudents();
+
+        function getStudents() {
+            $.ajax({
+                url: 'students/getStudents',
+                type: 'get',
+                //这个data是为了给查询功能用的，不然不用加
+                data: data,
+                success({ message, status, data }) {
+                    if (status) {
+                        //如果进来表示学生数据获取成功
+                        //渲染数据
+
+                        //Method 1: 
+                        const str = data.map(function (item, index) {
+                            return `
+                                <tr>
+                                    <td>${item.name}</td>
+                                    <td>${item.age}</td>
+                                    <td>${item.gender}</td>
+                                    <td>
+                                        <button class="rmBtn" data-id="${item._id}">Delete</button>
+                                        <button class="editBtn" data-id="${item._id}">Edit</button>    
+                                    </td>    
+                                </tr>
+                            `;
+                        }).join('');
+                        $('tbody').html(str);
+
+                        //Method 2: 
+                        // let str = '';
+                        // data.forEach(item => {
+                        //     str += `
+                        //         <tr>
+                        //             <td>${item.name}</td>
+                        //             <td>${item.age}</td>
+                        //             <td>${item.gender}</td>
+                        //             <td>
+                        //                 <button>Delete</button>
+                        //                 <button>Edit</button>    
+                        //             </td>    
+                        //         </tr>
+                        //     `;
+                        // });
+                        // $('tbody').html(str);
+                    }
+                }
+            })
+        }
+
+        //给查询按钮添加一个点击事件
+        $('#searchBtn').click(function () {
+            const searchType = $('#searchType').val();
+            const searchValue = $('#searchValue').val();
+            //对象的属性名如果是变量的话，那么只能通过[]来访问,通过赋值的方法来每一次只赋值当前查询信息，而不是叠加
+            data = {
+                searchType,
+                searchValue
+            }
+            console.log(data);
+            getStudents();
+        })
+
+        //Delete function： 事件委托 --> 将子元素想执行的事件交给父元素
+        $('tbody').on('click', '.rmBtn', function () {
+            const _id = $(this).data('id');
+            // console.log(_id);
+            $.ajax({
+                url: '/students/rmStudent',
+                data: { _id },
+                type: 'post',
+                success(msg) {
+                    if (msg.status) {
+                        alert('Delete successful');
+                        getStudents();
+                    }
+                }
+            })
+        })
+
+        //Edit function: 事件委托 --> 将子元素想执行的事件交给父元素
+        $('tbody').on('click', '.editBtn', function () {
+            const _id = $(this).data('id');
+            $.ajax({
+                url: 'students/getStudentsById',
+                type: 'get',
+                data: { _id },
+                success(msg) {
+                    if (msg.status) {
+                        $('#editStudentName').val(msg.data.name);
+                        $('#editStudentAge').val(msg.data.age);
+                        $(`[name = editStudentGender][value=${msg.data.gender}]`).prop('checked', true);
+                        $('#editStudentId').val(msg.data._id);
+                    }
+                }
+            });
+        })
+
+        // Edit student submit
+        $('#editStudents').click(function () {
+            const _id = $('#editStudentId').val();
+            const name = $('#editStudentName').val();
+            const age = $('#editStudentAge').val();
+            const gender = $(`[name = editStudentGender]:checked`).val();
+            $.ajax({
+                url: 'students/updateStudents',
+                data: { _id, name, age, gender },
+                type: 'post',
+                success(msg) {
+                    if (msg.status) {
+                        getStudents();
+                    }
+                }
+            })
+        })
+
+        // Add student
+        $('#addStudents').click(function () {
+            const name = $('#addStudentName').val();
+            const age = $('#addStudentAge').val();
+            const gender = $('[name = addStudentGender]:checked').val();
+
+            $.ajax({
+                url: '/students/addStudents',
+                type: 'post',
+                data: { name, age, gender },
+                success(msg) {
+                    if (msg.status) {
+                        getStudents();
+                    }
+                }
+            });
+        })
+    </script>
+</body>
+
+</html>

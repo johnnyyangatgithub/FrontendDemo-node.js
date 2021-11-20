@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        h1 {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Welcome to register</h1>
+    username<input type="text" id="username">
+    password<input type="text" id="password">
+    <button id="regbtn">register</button>
+    <script src="./js/jquery.min.js"></script>
+    <script>
+        //验证用户名是否存在
+        $('#username').blur(function () {
+            const username = $('#username').val();
+            $.ajax({
+                url: '/users/isAccess',
+                data: { username },
+                type: 'post',
+                success(msg) {
+                    if (!msg.status) {
+                        $('#regbtn').prop('disabled', true);
+                    } else {
+                        $('#regbtn').prop('disabled', false);
+                    }
+                }
+            })
+        });
+        $('#regbtn').click(function () {
+            const username = $('#username').val();
+            const password = $('#password').val();
+
+            $.ajax({
+                //一级路径是用来让别人知道对什么文件/什么群体进行操作，然后第二个单词是动词，什么操作
+                url: '/users/register',
+                //设置前端给后端发送的数据
+                data: {
+                    username,
+                    password
+                },
+                //请求类型
+                type: 'post',
+                //请求成功后触发方法，msg用于接收后端相应回来的结果
+                success(msg) {//是success: function(msg) 的简写
+                    console.log(msg);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        h1 {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    
+    <script src="./js/jquery.min.js"></script>
+    <script>
+            $.ajax({
+                url: '/movies/getMovies',
+                data: {
+                    name: '复仇者联盟'
+                },
+                //请求类型
+                type: 'get',
+                //请求成功后触发方法，msg用于接收后端相应回来的结果
+                success(msg) {//是success: function(msg) 的简写
+                    console.log(msg);
+                }
+            });
+    </script>
+</body>
+</html>
